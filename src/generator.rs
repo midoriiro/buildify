@@ -14,12 +14,12 @@ use ast_shaper::utils::statement::{Expr, Statement};
 use crate::field::Field;
 use crate::field_rule::{FieldRule, FieldRuleItemSelectorBuilder};
 
-pub struct BuilderGenerator {
+pub struct Generator {
     modules: Rc<RefCell<Vec<ModuleItems>>>,
     field_rules: Rc<RefCell<Vec<FieldRule>>>
 }
 
-impl BuilderGenerator {
+impl Generator {
     pub fn new(modules: Rc<RefCell<Vec<ModuleItems>>>) -> Self {
         Self {
             modules,
@@ -210,7 +210,7 @@ impl BuilderGenerator {
         fields: &Vec<Field>
     ) -> Vec<StructItem> {
         fn generate_builder(
-            generator: &BuilderGenerator,
+            generator: &Generator,
             attributes: Vec<Attribute>,
             visibility: Visibility,
             generics: Generics,
@@ -336,7 +336,7 @@ impl BuilderGenerator {
     }
 }
 
-impl Clone for BuilderGenerator {
+impl Clone for Generator {
     fn clone(&self) -> Self {
         Self {
             modules: self.modules.clone(),

@@ -5,11 +5,11 @@ use syn::spanned::Spanned;
 use ast_shaper::utils::{create_generic_type, create_ident};
 use ast_shaper::utils::path::Path;
 use ast_shaper::utils::statement::{Expr, ExprMethodChainCall, Statement};
-use crate::builder_generator::BuilderGenerator;
+use crate::generator::Generator;
 use crate::field_type_segment::FieldTypeSegment;
 
 pub(crate) struct Field {
-    generator: BuilderGenerator,
+    generator: Generator,
     pub item: syn::Field,
     pub ident: String,
     pub ty: FieldTypeSegment,
@@ -17,7 +17,7 @@ pub(crate) struct Field {
 }
 
 impl Field {
-    pub(crate) fn new(generator: BuilderGenerator, item: syn::Field) -> Self {
+    pub(crate) fn new(generator: Generator, item: syn::Field) -> Self {
         let mut field = item.clone();
         field.vis = Visibility::Inherited;
         let field_ident = item.ident.clone().unwrap().to_string();

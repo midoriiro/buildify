@@ -2,7 +2,7 @@ use syn::PathArguments;
 use ast_shaper::items::item::{Item, ItemTrait};
 use ast_shaper::utils::create_generic_type;
 use ast_shaper::utils::path::Path;
-use crate::builder_generator::BuilderGenerator;
+use crate::generator::Generator;
 use crate::constants::{DECOMPOSABLE_TYPES, RESERVED_TYPES};
 use crate::field::Field;
 
@@ -16,7 +16,7 @@ pub(crate) struct FieldTypeSegment {
 }
 
 impl FieldTypeSegment {
-    pub fn new(generator: &BuilderGenerator, ty: Path) -> Self {
+    pub fn new(generator: &Generator, ty: Path) -> Self {
         let ty = ty.flatten();
         let (ty, underlying_ty) = Self::decompose_underlying(generator, &ty);
         let ty_segment = ty.last().unwrap().clone();
@@ -51,7 +51,7 @@ impl FieldTypeSegment {
         }
     }
 
-    pub(self) fn compose(generator: &BuilderGenerator, item: Item) -> (String, Vec<Field>) {
+    pub(self) fn compose(generator: &Generator, item: Item) -> (String, Vec<Field>) {
         let (item_ident, item) = match &item {
             Item::Struct(value) => {
                 let item = value.clone();
@@ -80,7 +80,7 @@ impl FieldTypeSegment {
     pub(crate) fn decompose(&self) -> Path {
         match self.inner_fields {
             Some(_) => {
-                Path::from(BuilderGenerator::ident(&self.ty.last().unwrap().ident))
+                Path::from(Generator::ident(&self.ty.last().unwrap().ident))
             }
             None => {
                 match &self.underlying_ty {
@@ -98,7 +98,7 @@ impl FieldTypeSegment {
         }
     }
 
-    pub(self) fn decompose_underlying(generator: &BuilderGenerator, path: &Path) -> (Path, Option<Vec<FieldTypeSegment>>) {
+    pub(self) fn decompose_underlying(generator: &Generator, path: &Path) -> (Path, Option<Vec<FieldTypeSegment>>) {
         let segment = path.last().cloned().unwrap();
         match segment.arguments {
             PathArguments::AngleBracketed(_) => {
