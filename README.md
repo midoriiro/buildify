@@ -8,6 +8,6 @@ Key Features:
  - Fluent interface for building complex objects step by step.
  - Ensures type safety and ease of use with minimal boilerplate code.
  - Makes code more readable and maintainable by providing clear and concise builder interfaces.
- - Fully integrates with **AST-Shaper** for even easier code generation.
+ - Fully integrates with **[AST-Shaper](https://github.com/midoriiro/ast-shaper)** for even easier code generation.
 
 **Buildify** is perfect for developers looking to create clean, readable, and maintainable builders in Rust with minimal effort.
