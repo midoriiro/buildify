@@ -1,0 +1,17 @@
+[package]
+name = "buildify"
+edition = "2021"
+authors = ["Alexis Bekhdadi <alexis@bekhdadi.com>"]
+license = "Apache-2.0"
+description = "A Rust library for generating builder patterns for structs and enums."
+repository = "https://github.com/midoriiro/buildify.git"
+documentation = ""
+keywords = ["builder", "pattern", "code", "generation"]
+version = "0.1.0"
+
+[dependencies]
+ast-shaper = { path = "../ast-shaper" }
+syn = { version = "2.0", features = ["full", "derive", "extra-traits"] }
+quote = "1.0"
+prettyplease = "0.2"
+itertools = "0.14"
