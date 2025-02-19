@@ -1,9 +1,6 @@
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::rc::Rc;
-use itertools::Itertools;
-use syn::{Attribute, Block, Fields, FieldsNamed, FnArg, Generics, Ident, ImplItem, ImplItemFn, ItemImpl, ItemStruct, Receiver, ReturnType, Signature, Token, Type, TypePath, TypeReference, Visibility};
-use syn::punctuated::Punctuated;
+use crate::field::Field;
+use crate::field_rule::{FieldRule, FieldRuleItemSelectorBuilder};
+use crate::field_type_segment::InnerFieldTypeSegment;
 use ast_shaper::items::item::{Item, ItemTrait};
 use ast_shaper::items::module_item::ModuleItems;
 use ast_shaper::items::struct_item::StructItem;
@@ -11,8 +8,12 @@ use ast_shaper::utils::create_ident;
 use ast_shaper::utils::path::Path;
 use ast_shaper::utils::punctuated::PunctuatedExt;
 use ast_shaper::utils::statement::{Expr, Statement};
-use crate::field::Field;
-use crate::field_rule::{FieldRule, FieldRuleItemSelectorBuilder};
+use itertools::Itertools;
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::rc::Rc;
+use syn::punctuated::Punctuated;
+use syn::{Attribute, Block, Fields, FieldsNamed, FnArg, Generics, Ident, ImplItem, ImplItemFn, ItemImpl, ItemStruct, Receiver, ReturnType, Signature, Token, Type, TypePath, TypeReference, Visibility};
 
 pub struct Generator {
     modules: Rc<RefCell<Vec<ModuleItems>>>,
@@ -50,7 +51,7 @@ impl Generator {
             })
     } 
 
-    pub fn generate(&mut self, item: &syn::Item) -> Vec<StructItem> {
+    pub fn generate(&self, item: &syn::Item) -> Vec<StructItem> {
         let attributes = match &item {
             syn::Item::Struct(value) => &value.attrs,
             syn::Item::Enum(value) => &value.attrs,
@@ -94,10 +95,10 @@ impl Generator {
 
     pub(crate) fn generate_fields(&self, item: &syn::Item) -> Vec<Field> {
         let ident = match item {
-            syn::Item::Enum(value) => {
+            syn::Item::Struct(value) => {
                 value.ident.to_string()
             }
-            syn::Item::Struct(value) => {
+            syn::Item::Enum(value) => {
                 value.ident.to_string()
             }
             _ => panic!("Expected struct or enum item")
@@ -154,7 +155,7 @@ impl Generator {
             fields: Fields::Named(FieldsNamed {
                 brace_token: Default::default(),
                 named: fields.iter()
-                    .map(|field| field.decompose())
+                    .map(|field| field.unwrap())
                     .collect::<Punctuated<syn::Field, Token![,]>>(),
             }),
             semi_token: Default::default(),
@@ -233,18 +234,19 @@ impl Generator {
                 StructItem::new(struct_item, vec![struct_impl_item])
             ];
             let mut inner_builders = fields.iter()
-                .filter_map(|inner_field| {
-                    match &inner_field.ty.inner_fields {
-                        Some(value) => {
+                .filter_map(|field| {
+                    match &field.ty.inner {
+                        InnerFieldTypeSegment::Complex(value) => {
                             Some(generate_builder(
                                 generator,
                                 attributes.clone(),
                                 visibility.clone(),
                                 generics.clone(),
-                                inner_field.ty.ty.last().unwrap().ident.clone(),
-                                &value))
+                                create_ident(value.ident.clone()),
+                                &value.inner
+                            ))
                         }
-                        None => None
+                        _ => None
                     }
                 })
                 .flatten()
@@ -254,23 +256,19 @@ impl Generator {
         }
         let builders = fields.iter()
             .filter_map(|field| {
-                match field.ty.is_complex {
-                    true => {}
-                    false => return None
-                }
-                match &field.ty.inner_fields {
-                    Some(value) => {
+                match &field.ty.inner {
+                    InnerFieldTypeSegment::Complex(value) => {
                         let builders = generate_builder(
                             self,
                             attributes.clone(),
                             visibility.clone(),
                             generics.clone(),
-                            field.ty.ty.last().unwrap().ident.clone(),
-                            value
+                            create_ident(value.ident.clone()),
+                            &value.inner
                         );
                         Some(builders)
-                    },
-                    None => None
+                    }
+                    _ => return None
                 }
             })
             .flatten()

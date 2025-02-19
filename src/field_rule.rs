@@ -1,9 +1,9 @@
+use crate::field::Field;
+use ast_shaper::utils::create_generic_type;
+use ast_shaper::utils::path::Path;
 use std::cell::RefCell;
 use std::rc::Rc;
 use syn::Meta;
-use ast_shaper::utils::create_generic_type;
-use ast_shaper::utils::path::Path;
-use crate::field::Field;
 
 pub struct FieldRuleItemSelectorBuilder {
     rules: Rc<RefCell<Vec<FieldRule>>>
@@ -84,10 +84,6 @@ impl FieldRuleThenSelectorBuilder {
 
     pub fn then_map(&mut self, ty: Path) -> &mut Self {
         self.then(move |field| field.map(ty.clone()))
-    }
-
-    pub fn then_map_underlying(&mut self, position: usize, ty: Path) -> &mut Self {
-        self.then(move |field| field.map_underlying(position, ty.clone()))
     }
 
     pub fn then_remap_to_vec(&mut self, ty: Path) -> &mut Self {
