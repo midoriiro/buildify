@@ -2,7 +2,7 @@ use crate::field::Field;
 use crate::field_rule::{FieldRule, FieldRuleItemSelectorBuilder};
 use crate::field_type_segment::InnerFieldTypeSegment;
 use ast_shaper::items::item::{Item, ItemTrait};
-use ast_shaper::items::module_item::ModuleItems;
+use ast_shaper::items::module_item::ModuleItem;
 use ast_shaper::items::struct_item::StructItem;
 use ast_shaper::utils::create_ident;
 use ast_shaper::utils::path::Path;
@@ -16,12 +16,12 @@ use syn::punctuated::Punctuated;
 use syn::{Attribute, Block, Fields, FieldsNamed, FnArg, Generics, Ident, ImplItem, ImplItemFn, ItemImpl, ItemStruct, Receiver, ReturnType, Signature, Token, Type, TypePath, TypeReference, Visibility};
 
 pub struct Generator {
-    modules: Rc<RefCell<Vec<ModuleItems>>>,
+    modules: Rc<RefCell<Vec<ModuleItem>>>,
     pub(crate) field_rules: Rc<RefCell<Vec<FieldRule>>>
 }
 
 impl Generator {
-    pub fn new(modules: Rc<RefCell<Vec<ModuleItems>>>) -> Self {
+    pub fn new(modules: Rc<RefCell<Vec<ModuleItem>>>) -> Self {
         Self {
             modules,
             field_rules: Rc::new(RefCell::new(Vec::new())),

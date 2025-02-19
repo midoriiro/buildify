@@ -1,7 +1,7 @@
 use quote::__private::TokenStream;
 use syn::{parse2, Fields, ImplItemFn, Type};
 use ast_shaper::items::fn_item::FnItem;
-use ast_shaper::items::module_item::ModuleItems;
+use ast_shaper::items::module_item::ModuleItem;
 use ast_shaper::utils::path::Path;
 use crate::generator::Generator;
 use pretty_assertions::assert_eq;
@@ -37,7 +37,7 @@ fn internal_assert_builder(
 }
 
 pub fn assert_builder_with_rules(
-    module: &ModuleItems,
+    module: &ModuleItem,
     generator: &mut Generator,
     expected_field_type: Path,
     mut rules: Vec<fn(&mut Generator)>
@@ -57,7 +57,7 @@ pub fn assert_builder_with_rules(
 }
 
 pub fn assert_builder(
-    module: &ModuleItems,
+    module: &ModuleItem,
     generator: &Generator,
     expected_field_type: Path
 ) -> (TokenStream, StructItem) {

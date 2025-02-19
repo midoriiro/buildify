@@ -1,6 +1,6 @@
 use syn::ExprPath;
 use crate::generator::Generator;
-use ast_shaper::items::module_item::ModuleItems;
+use ast_shaper::items::module_item::ModuleItem;
 use ast_shaper::items::struct_item::StructItem;
 use ast_shaper::utils::create_ident;
 use ast_shaper::utils::path::Path;
@@ -15,8 +15,8 @@ use syn::spanned::Spanned;
 use syn::token::Token;
 
 #[fixture]
-pub fn module() -> ModuleItems {
-    ModuleItems::new("test_module")
+pub fn module() -> ModuleItem {
+    ModuleItem::new("test_module")
 }
 
 #[fixture]
@@ -219,9 +219,9 @@ pub fn field_with_attribute_as_list(mut required_field: syn::Field) -> syn::Fiel
 
 #[fixture]
 pub fn struct_with_required_field(
-    mut module: ModuleItems,
+    mut module: ModuleItem,
     required_field: syn::Field
-) -> ModuleItems {
+) -> ModuleItem {
     let item = StructItem::new(
         ItemStruct {
             attrs: vec![],
@@ -243,9 +243,9 @@ pub fn struct_with_required_field(
 
 #[fixture]
 pub fn struct_with_optional_field(
-    mut module: ModuleItems,
+    mut module: ModuleItem,
     optional_field: syn::Field
-) -> ModuleItems {
+) -> ModuleItem {
     let item = StructItem::new(
         ItemStruct {
             attrs: vec![],
@@ -267,9 +267,9 @@ pub fn struct_with_optional_field(
 
 #[fixture]
 pub fn struct_with_optional_and_optional_field(
-    mut module: ModuleItems,
+    mut module: ModuleItem,
     optional_and_optional_field: syn::Field
-) -> ModuleItems {
+) -> ModuleItem {
     let item = StructItem::new(
         ItemStruct {
             attrs: vec![],
@@ -291,9 +291,9 @@ pub fn struct_with_optional_and_optional_field(
 
 #[fixture]
 pub fn struct_with_boxed_field(
-    mut module: ModuleItems,
+    mut module: ModuleItem,
     boxed_field: syn::Field
-) -> ModuleItems {
+) -> ModuleItem {
     let item = StructItem::new(
         ItemStruct {
             attrs: vec![],
@@ -315,9 +315,9 @@ pub fn struct_with_boxed_field(
 
 #[fixture]
 pub fn struct_with_optional_and_boxed_field(
-    mut module: ModuleItems,
+    mut module: ModuleItem,
     optional_and_boxed_field: syn::Field
-) -> ModuleItems {
+) -> ModuleItem {
     let item = StructItem::new(
         ItemStruct {
             attrs: vec![],
@@ -339,9 +339,9 @@ pub fn struct_with_optional_and_boxed_field(
 
 #[fixture]
 pub fn struct_with_ref_counter_and_refcell_field(
-    mut module: ModuleItems,
+    mut module: ModuleItem,
     ref_counter_and_refcell_field: syn::Field
-) -> ModuleItems {
+) -> ModuleItem {
     let item = StructItem::new(
         ItemStruct {
             attrs: vec![],
@@ -363,9 +363,9 @@ pub fn struct_with_ref_counter_and_refcell_field(
 
 #[fixture]
 pub fn struct_with_vec_of_primitive_field(
-    mut module: ModuleItems,
+    mut module: ModuleItem,
     vec_of_primitive_field: syn::Field
-) -> ModuleItems {
+) -> ModuleItem {
     let item = StructItem::new(
         ItemStruct {
             attrs: vec![],
@@ -387,9 +387,9 @@ pub fn struct_with_vec_of_primitive_field(
 
 #[fixture]
 pub fn struct_with_map_of_primitive_field(
-    mut module: ModuleItems,
+    mut module: ModuleItem,
     map_of_primitive_field: syn::Field
-) -> ModuleItems {
+) -> ModuleItem {
     let item = StructItem::new(
         ItemStruct {
             attrs: vec![],
@@ -411,10 +411,10 @@ pub fn struct_with_map_of_primitive_field(
 
 #[fixture]
 pub fn struct_with_complex_field(
-    mut module: ModuleItems,
+    mut module: ModuleItem,
     complex_field: syn::Field,
     required_field: syn::Field
-) -> ModuleItems {
+) -> ModuleItem {
     let item = StructItem::new(
         ItemStruct {
             attrs: vec![],
@@ -457,11 +457,11 @@ pub fn struct_with_complex_field(
 
 #[fixture]
 pub fn struct_with_field_attributes(
-    mut module: ModuleItems,
+    mut module: ModuleItem,
     field_with_attribute_as_path: syn::Field,
     field_with_attribute_as_name_value: syn::Field,
     field_with_attribute_as_list: syn::Field
-) -> ModuleItems {
+) -> ModuleItem {
     let item = StructItem::new(
         ItemStruct {
             attrs: vec![],
@@ -487,15 +487,15 @@ pub fn struct_with_field_attributes(
 
 #[fixture]
 pub fn generator(
-    struct_with_required_field: ModuleItems,
-    struct_with_optional_field: ModuleItems,
-    struct_with_optional_and_optional_field: ModuleItems,
-    struct_with_boxed_field: ModuleItems,
-    struct_with_ref_counter_and_refcell_field: ModuleItems,
-    struct_with_optional_and_boxed_field: ModuleItems,
-    struct_with_vec_of_primitive_field: ModuleItems,
-    struct_with_complex_field: ModuleItems,
-    struct_with_field_attributes: ModuleItems,
+    struct_with_required_field: ModuleItem,
+    struct_with_optional_field: ModuleItem,
+    struct_with_optional_and_optional_field: ModuleItem,
+    struct_with_boxed_field: ModuleItem,
+    struct_with_ref_counter_and_refcell_field: ModuleItem,
+    struct_with_optional_and_boxed_field: ModuleItem,
+    struct_with_vec_of_primitive_field: ModuleItem,
+    struct_with_complex_field: ModuleItem,
+    struct_with_field_attributes: ModuleItem,
 ) -> Generator {
     let modules = Rc::new(RefCell::new(vec![
         struct_with_required_field,

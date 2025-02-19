@@ -2,14 +2,14 @@ use quote::quote;
 use crate::generator::Generator;
 use crate::test_utils::asserts::{assert_builder_with_rules, assert_method};
 use crate::test_utils::fixtures::{generator, struct_with_field_attributes, struct_with_required_field, struct_with_vec_of_primitive_field};
-use ast_shaper::items::module_item::ModuleItems;
+use ast_shaper::items::module_item::ModuleItem;
 use ast_shaper::utils::path::Path;
 use rstest::rstest;
 
 #[rstest]
 fn with_incomplete_rule(
     mut generator: Generator,
-    struct_with_required_field: ModuleItems
+    struct_with_required_field: ModuleItem
 ) {
     let (generator, _, _) = assert_builder_with_rules(
         &struct_with_required_field,
@@ -33,7 +33,7 @@ fn with_incomplete_rule(
 #[rstest]
 fn with_non_existing_item(
     mut generator: Generator,
-    struct_with_required_field: ModuleItems
+    struct_with_required_field: ModuleItem
 ) {
     let (generator, item_ident, item) = assert_builder_with_rules(
         &struct_with_required_field,
@@ -89,7 +89,7 @@ fn with_non_existing_item(
 #[rstest]
 fn with_non_existing_field(
     mut generator: Generator,
-    struct_with_required_field: ModuleItems
+    struct_with_required_field: ModuleItem
 ) {
     let (generator, item_ident, item) = assert_builder_with_rules(
         &struct_with_required_field,
@@ -146,7 +146,7 @@ fn with_non_existing_field(
 #[should_panic]
 fn rename_all(
     mut generator: Generator,
-    struct_with_required_field: ModuleItems
+    struct_with_required_field: ModuleItem
 ) {
     let (_, _, _) = assert_builder_with_rules(
         &struct_with_required_field,
@@ -167,7 +167,7 @@ fn rename_all(
 #[should_panic]
 fn map_all(
     mut generator: Generator,
-    struct_with_required_field: ModuleItems
+    struct_with_required_field: ModuleItem
 ) {
     let (_, _, _) = assert_builder_with_rules(
         &struct_with_required_field,
@@ -188,7 +188,7 @@ fn map_all(
 #[should_panic]
 fn map_all_to_vec(
     mut generator: Generator,
-    struct_with_required_field: ModuleItems
+    struct_with_required_field: ModuleItem
 ) {
     let (_, _, _) = assert_builder_with_rules(
         &struct_with_required_field,
@@ -208,7 +208,7 @@ fn map_all_to_vec(
 #[rstest]
 fn field_type_selector(
     mut generator: Generator,
-    struct_with_field_attributes: ModuleItems
+    struct_with_field_attributes: ModuleItem
 ) {
     let (generator, _, item) = assert_builder_with_rules(
         &struct_with_field_attributes,
@@ -241,7 +241,7 @@ fn field_type_selector(
 #[rstest]
 fn discard_attributes(
     mut generator: Generator,
-    struct_with_field_attributes: ModuleItems
+    struct_with_field_attributes: ModuleItem
 ) {
     let (generator, _, item) = assert_builder_with_rules(
         &struct_with_field_attributes,
@@ -281,7 +281,7 @@ fn discard_attributes(
 #[rstest]
 fn rename(
     mut generator: Generator,
-    struct_with_required_field: ModuleItems
+    struct_with_required_field: ModuleItem
 ) {
     let (generator, _, item) = assert_builder_with_rules(
         &struct_with_required_field,
@@ -305,7 +305,7 @@ fn rename(
 #[rstest]
 fn map_from_primitive_to_primitive(
     mut generator: Generator,
-    struct_with_required_field: ModuleItems
+    struct_with_required_field: ModuleItem
 ) {
     let (generator, item_ident, item) = assert_builder_with_rules(
         &struct_with_required_field,
@@ -361,7 +361,7 @@ fn map_from_primitive_to_primitive(
 #[rstest]
 fn map_from_primitive_to_vec(
     mut generator: Generator,
-    struct_with_required_field: ModuleItems
+    struct_with_required_field: ModuleItem
 ) {
     let (generator, item_ident, item) = assert_builder_with_rules(
         &struct_with_required_field,
@@ -422,7 +422,7 @@ fn map_from_primitive_to_vec(
 #[rstest]
 fn map_from_vec_to_vec(
     mut generator: Generator,
-    struct_with_vec_of_primitive_field: ModuleItems
+    struct_with_vec_of_primitive_field: ModuleItem
 ) {
     let (generator, item_ident, item) = assert_builder_with_rules(
         &struct_with_vec_of_primitive_field,

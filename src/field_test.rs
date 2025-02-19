@@ -1,6 +1,6 @@
 use crate::generator::Generator;
 use crate::test_utils::fixtures::{generator, struct_with_boxed_field, struct_with_complex_field, struct_with_map_of_primitive_field, struct_with_optional_and_boxed_field, struct_with_optional_and_optional_field, struct_with_optional_field, struct_with_ref_counter_and_refcell_field, struct_with_required_field, struct_with_vec_of_primitive_field};
-use ast_shaper::items::module_item::ModuleItems;
+use ast_shaper::items::module_item::ModuleItem;
 use ast_shaper::utils::path::Path;
 use crate::test_utils::asserts::{assert_builder, assert_method};
 use quote::quote;
@@ -9,7 +9,7 @@ use rstest::rstest;
 #[rstest]
 fn as_required(
     generator: Generator,
-    struct_with_required_field: ModuleItems
+    struct_with_required_field: ModuleItem
 ) {
     let (item_ident, item) = assert_builder(
         &struct_with_required_field, 
@@ -56,7 +56,7 @@ fn as_required(
 #[rstest]
 fn as_optional(
     generator: Generator,
-    struct_with_optional_field: ModuleItems
+    struct_with_optional_field: ModuleItem
 ) {
     let (item_ident, item) = assert_builder(
         &struct_with_optional_field,
@@ -103,7 +103,7 @@ fn as_optional(
 #[rstest]
 fn as_optional_and_optional(
     generator: Generator,
-    struct_with_optional_and_optional_field: ModuleItems
+    struct_with_optional_and_optional_field: ModuleItem
 ) {
     let (item_ident, item) = assert_builder(
         &struct_with_optional_and_optional_field,
@@ -150,7 +150,7 @@ fn as_optional_and_optional(
 #[rstest]
 fn as_boxed(
     generator: Generator,
-    struct_with_boxed_field: ModuleItems
+    struct_with_boxed_field: ModuleItem
 ) {
     let (item_ident, item) = assert_builder(
         &struct_with_boxed_field,
@@ -199,7 +199,7 @@ fn as_boxed(
 #[rstest]
 fn as_optional_and_boxed(
     generator: Generator,
-    struct_with_optional_and_boxed_field: ModuleItems
+    struct_with_optional_and_boxed_field: ModuleItem
 ) {
     let (item_ident, item) = assert_builder(
         &struct_with_optional_and_boxed_field,
@@ -248,7 +248,7 @@ fn as_optional_and_boxed(
 #[rstest]
 fn as_ref_counter_and_ref_cell(
     generator: Generator,
-    struct_with_ref_counter_and_refcell_field: ModuleItems
+    struct_with_ref_counter_and_refcell_field: ModuleItem
 ) {
     let (item_ident, item) = assert_builder(
         &struct_with_ref_counter_and_refcell_field,
@@ -300,7 +300,7 @@ fn as_ref_counter_and_ref_cell(
 #[rstest]
 fn as_vec_of_primitive(
     generator: Generator,
-    struct_with_vec_of_primitive_field: ModuleItems
+    struct_with_vec_of_primitive_field: ModuleItem
 ) {
     let (item_ident, item) = assert_builder(
         &struct_with_vec_of_primitive_field,
@@ -352,7 +352,7 @@ fn as_vec_of_primitive(
 #[rstest]
 fn as_map_of_primitive(
     generator: Generator,
-    struct_with_map_of_primitive_field: ModuleItems
+    struct_with_map_of_primitive_field: ModuleItem
 ) {
     let (item_ident, item) = assert_builder(
         &struct_with_map_of_primitive_field,
@@ -408,7 +408,7 @@ fn as_map_of_primitive(
 #[rstest]
 fn as_complex(
     generator: Generator,
-    struct_with_complex_field: ModuleItems
+    struct_with_complex_field: ModuleItem
 ) {
     let (item_ident, item) = assert_builder(
         &struct_with_complex_field,
