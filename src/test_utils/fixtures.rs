@@ -1,3 +1,4 @@
+use syn::ExprPath;
 use crate::generator::Generator;
 use ast_shaper::items::module_item::ModuleItems;
 use ast_shaper::items::struct_item::StructItem;
@@ -7,8 +8,11 @@ use ast_shaper::utils::punctuated::PunctuatedExt;
 use rstest::fixture;
 use std::cell::RefCell;
 use std::rc::Rc;
+use quote::ToTokens;
 use syn::punctuated::Punctuated;
-use syn::{FieldMutability, Fields, FieldsNamed, ItemStruct, Type, TypePath, Visibility};
+use syn::{AttrStyle, Attribute, Expr, ExprLit, FieldMutability, Fields, FieldsNamed, ItemStruct, Lit, LitStr, MacroDelimiter, Meta, MetaList, MetaNameValue, Token, Type, TypePath, Visibility};
+use syn::spanned::Spanned;
+use syn::token::Token;
 
 #[fixture]
 pub fn module() -> ModuleItems {
@@ -159,6 +163,58 @@ pub fn complex_field() -> syn::Field {
             path: Path::new("ComplexType").to_syn_path(),
         }),
     }
+}
+
+
+#[fixture]
+pub fn field_with_attribute_as_path(mut required_field: syn::Field) -> syn::Field {
+    required_field.ident = Some(create_ident("field_with_attribute_as_path"));
+    required_field.attrs.push(Attribute {
+        pound_token: Default::default(),
+        style: AttrStyle::Outer,
+        bracket_token: Default::default(),
+        meta: Meta::Path(Path::new("attribute_as_path").to_syn_path()),
+    });
+    required_field
+}
+
+#[fixture]
+pub fn field_with_attribute_as_name_value(mut required_field: syn::Field) -> syn::Field {
+    required_field.ident = Some(create_ident("field_with_attribute_as_name_value"));
+    required_field.attrs.push(Attribute {
+        pound_token: Default::default(),
+        style: AttrStyle::Outer,
+        bracket_token: Default::default(),
+        meta: Meta::NameValue(MetaNameValue {
+            path: Path::new("attribute_as_name_value").to_syn_path(),
+            eq_token: Default::default(),
+            value: Expr::Path(ExprPath {
+                attrs: vec![],
+                qself: None,
+                path: Path::new("value").to_syn_path(),
+            })
+        })
+    });
+    required_field
+}
+
+#[fixture]
+pub fn field_with_attribute_as_list(mut required_field: syn::Field) -> syn::Field {
+    required_field.ident = Some(create_ident("field_with_attribute_as_list"));
+    required_field.attrs.push(Attribute {
+        pound_token: Default::default(),
+        style: AttrStyle::Outer,
+        bracket_token: Default::default(),
+        meta: Meta::List(MetaList {
+            path: Path::new("attribute_as_list").to_syn_path(),
+            delimiter: MacroDelimiter::Paren(Default::default()),
+            tokens: <Punctuated<syn::Path, Token![,]> as ToTokens>::to_token_stream(&Punctuated::from_iter(vec![
+                Path::new("value1").to_syn_path(),
+                Path::new("value2").to_syn_path(),
+            ]))
+        }),
+    });
+    required_field
 }
 
 #[fixture]
@@ -400,6 +456,36 @@ pub fn struct_with_complex_field(
 }
 
 #[fixture]
+pub fn struct_with_field_attributes(
+    mut module: ModuleItems,
+    field_with_attribute_as_path: syn::Field,
+    field_with_attribute_as_name_value: syn::Field,
+    field_with_attribute_as_list: syn::Field
+) -> ModuleItems {
+    let item = StructItem::new(
+        ItemStruct {
+            attrs: vec![],
+            vis: Visibility::Inherited,
+            struct_token: Default::default(),
+            ident: create_ident("StructWithFieldAttributes"),
+            generics: Default::default(),
+            fields: Fields::Named(FieldsNamed {
+                brace_token: Default::default(),
+                named: Punctuated::from_iter(vec![
+                    field_with_attribute_as_path,
+                    field_with_attribute_as_name_value,
+                    field_with_attribute_as_list,
+                ]),
+            }),
+            semi_token: None,
+        },
+        vec![]
+    );
+    module.push_struct_item(item);
+    module
+}
+
+#[fixture]
 pub fn generator(
     struct_with_required_field: ModuleItems,
     struct_with_optional_field: ModuleItems,
@@ -409,6 +495,7 @@ pub fn generator(
     struct_with_optional_and_boxed_field: ModuleItems,
     struct_with_vec_of_primitive_field: ModuleItems,
     struct_with_complex_field: ModuleItems,
+    struct_with_field_attributes: ModuleItems,
 ) -> Generator {
     let modules = Rc::new(RefCell::new(vec![
         struct_with_required_field,
@@ -418,7 +505,8 @@ pub fn generator(
         struct_with_ref_counter_and_refcell_field,
         struct_with_optional_and_boxed_field,
         struct_with_vec_of_primitive_field,
-        struct_with_complex_field
+        struct_with_complex_field,
+        struct_with_field_attributes
     ]));
     Generator::new(modules)
 }

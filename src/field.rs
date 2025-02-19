@@ -52,7 +52,7 @@ impl Field {
     }
 
     pub fn map(&mut self, ty: Path) {
-        self.ty = FieldTypeSegment::new(&self.generator.clone(), ty);
+        self.ty = FieldTypeSegment::map(&self.generator.clone(), self.ty.clone(), ty);
     }
 
     pub(self) fn sanitized_ident(&self) -> String {
@@ -233,6 +233,19 @@ impl Field {
                     )
                 ]
             }
+            InnerFieldTypeSegment::Remap(value) => {
+                vec![
+                    (
+                        create_ident("value"),
+                        match &(*value.target).inner {
+                            InnerFieldTypeSegment::Vec(value) => {
+                                value.item.unwrap()
+                            }
+                            _ => value.target.unwrap()
+                        }
+                    )
+                ]
+            }
             _ => {
                 vec![
                     (
@@ -266,137 +279,199 @@ impl Field {
             calls.push(call);
             calls
         }
-        match &self.ty.inner {
-            InnerFieldTypeSegment::Complex(_) => {
-                vec![
-                    Statement::let_none_condition(
-                        Expr::Stmt(Statement::access_field(
-                            Path::new("self"),
-                            Path::new(self.ident.clone())
-                        )),
-                        vec![
-                            Statement::assign_field(
+        fn statement_generator(
+            ident: &String,
+            segment: &FieldTypeSegment
+        ) -> Vec<Stmt> {
+            match &segment.inner {
+                InnerFieldTypeSegment::Complex(_) => {
+                    vec![
+                        Statement::let_none_condition(
+                            Expr::Stmt(Statement::access_field(
                                 Path::new("self"),
-                                Path::new(self.ident.clone()),
-                                Expr::Stmt(Statement::call(
-                                    Path::new("Some"),
-                                    vec![
-                                        Expr::Stmt(Statement::call(
-                                            self.ty.unwrap().join("new").clone(),
-                                            vec![]
-                                        ))
-                                    ]
-                                ))
-                            )
-                        ]
-                    ),
-                    Statement::implicit_return(
-                        Expr::Stmt(Statement::method_chain_call(chain_call(self.ident.clone())))
-                    )
-                ]
-            }
-            InnerFieldTypeSegment::Vec(_) => {
-                vec![
-                    Statement::let_none_condition(
-                        Expr::Stmt(Statement::access_field(
-                            Path::new("self"),
-                            Path::new(self.ident.clone())
-                        )),
-                        vec![
-                            Statement::assign_field(
-                                Path::new("self"),
-                                Path::new(self.ident.clone()),
-                                Expr::Stmt(Statement::call(
-                                    Path::new("Some"),
-                                    vec![
-                                        Expr::Stmt(Statement::call(
-                                            Path::new("Vec").join("new").clone(),
-                                            vec![]
-                                        ))
-                                    ]
-                                ))
-                            )
-                        ]
-                    ),
-                    Statement::method_chain_call(extend_chain_call(
-                        &chain_call(self.ident.clone()),
-                        ExprMethodChainCall::Chained {
-                            method: Path::new("push"),
-                            arguments: vec![
-                                Expr::Path(Path::new("value"))
-                            ],
-                        }
-                    )),
-                    Statement::implicit_return(Expr::Path(Path::new("self")))
-                ]
-            }
-            InnerFieldTypeSegment::Map(_) => {
-                vec![
-                    Statement::let_none_condition(
-                        Expr::Stmt(Statement::access_field(
-                            Path::new("self"),
-                            Path::new(self.ident.clone())
-                        )),
-                        vec![
-                            Statement::assign_field(
-                                Path::new("self"),
-                                Path::new(self.ident.clone()),
-                                Expr::Stmt(Statement::call(
-                                    Path::new("Some"),
-                                    vec![
-                                        Expr::Stmt(Statement::call(
-                                            Path::new("HashMap").join("new").clone(),
-                                            vec![]
-                                        ))
-                                    ]
-                                ))
-                            )
-                        ]
-                    ),
-                    Statement::method_chain_call(extend_chain_call(
-                        &chain_call(self.ident.clone()),
-                        ExprMethodChainCall::Chained {
-                            method: Path::new("insert"),
-                            arguments: vec![
-                                Expr::Path(Path::new("key")),
-                                Expr::Path(Path::new("value")),
-                            ]
-                        }
-                    )),
-                    Statement::implicit_return(Expr::Path(Path::new("self")))
-                ]
-            }
-            _ => {
-                vec![
-                    Statement::assign_field(
-                        Path::new("self"),
-                        Path::new(self.ident.clone()),
-                        Expr::Stmt(Statement::call(
-                            Path::new("Some").clone(),
+                                Path::new(ident.clone())
+                            )),
                             vec![
-                                Expr::Path(Path::new("value"))
+                                Statement::assign_field(
+                                    Path::new("self"),
+                                    Path::new(ident.clone()),
+                                    Expr::Stmt(Statement::call(
+                                        Path::new("Some"),
+                                        vec![
+                                            Expr::Stmt(Statement::call(
+                                                segment.unwrap().join("new").clone(),
+                                                vec![]
+                                            ))
+                                        ]
+                                    ))
+                                )
                             ]
-                        ))
-                    ),
-                    Statement::implicit_return(Expr::Path(Path::new("self")))
-                ]
-            }
+                        ),
+                        Statement::implicit_return(
+                            Expr::Stmt(Statement::method_chain_call(chain_call(ident.clone())))
+                        )
+                    ]
+                }
+                InnerFieldTypeSegment::Vec(_) => {
+                    vec![
+                        Statement::let_none_condition(
+                            Expr::Stmt(Statement::access_field(
+                                Path::new("self"),
+                                Path::new(ident.clone())
+                            )),
+                            vec![
+                                Statement::assign_field(
+                                    Path::new("self"),
+                                    Path::new(ident.clone()),
+                                    Expr::Stmt(Statement::call(
+                                        Path::new("Some"),
+                                        vec![
+                                            Expr::Stmt(Statement::call(
+                                                Path::new("Vec").join("new").clone(),
+                                                vec![]
+                                            ))
+                                        ]
+                                    ))
+                                )
+                            ]
+                        ),
+                        Statement::method_chain_call(extend_chain_call(
+                            &chain_call(ident.clone()),
+                            ExprMethodChainCall::Chained {
+                                method: Path::new("push"),
+                                arguments: vec![
+                                    Expr::Path(Path::new("value"))
+                                ],
+                            }
+                        )),
+                        Statement::implicit_return(Expr::Path(Path::new("self")))
+                    ]
+                }
+                InnerFieldTypeSegment::Map(_) => {
+                    vec![
+                        Statement::let_none_condition(
+                            Expr::Stmt(Statement::access_field(
+                                Path::new("self"),
+                                Path::new(ident.clone())
+                            )),
+                            vec![
+                                Statement::assign_field(
+                                    Path::new("self"),
+                                    Path::new(ident.clone()),
+                                    Expr::Stmt(Statement::call(
+                                        Path::new("Some"),
+                                        vec![
+                                            Expr::Stmt(Statement::call(
+                                                Path::new("HashMap").join("new").clone(),
+                                                vec![]
+                                            ))
+                                        ]
+                                    ))
+                                )
+                            ]
+                        ),
+                        Statement::method_chain_call(extend_chain_call(
+                            &chain_call(ident.clone()),
+                            ExprMethodChainCall::Chained {
+                                method: Path::new("insert"),
+                                arguments: vec![
+                                    Expr::Path(Path::new("key")),
+                                    Expr::Path(Path::new("value")),
+                                ]
+                            }
+                        )),
+                        Statement::implicit_return(Expr::Path(Path::new("self")))
+                    ]
+                }
+                InnerFieldTypeSegment::Remap(value) => {
+                    statement_generator(ident, &*value.target)
+                }
+                _ => {
+                    vec![
+                        Statement::assign_field(
+                            Path::new("self"),
+                            Path::new(ident.clone()),
+                            Expr::Stmt(Statement::call(
+                                Path::new("Some").clone(),
+                                vec![
+                                    Expr::Path(Path::new("value"))
+                                ]
+                            ))
+                        ),
+                        Statement::implicit_return(Expr::Path(Path::new("self")))
+                    ]
+                }
+            }   
         }
+        statement_generator(&self.ident, &self.ty)
     }
 
     pub(crate) fn generate_build_method_statement(&self) -> Stmt {
-        let call = match self.ty.inner {
-            InnerFieldTypeSegment::Complex(_) => {
-                Expr::Stmt(Statement::method_call(
-                    Expr::Path(Path::new("value")),
-                    Path::new("build"),
-                    vec![]
-                ))
-            }
-            _ => {
-                Expr::Path(Path::new("value"))
+        fn statement_generator(
+            segment: &FieldTypeSegment
+        ) -> Expr {
+            match &segment.inner {
+                InnerFieldTypeSegment::Complex(_) => {
+                    Expr::Stmt(Statement::method_call(
+                        Expr::Path(Path::new("value")),
+                        Path::new("build"),
+                        vec![]
+                    ))
+                }
+                InnerFieldTypeSegment::Remap(value) => {
+                    match (&(*value.source).inner, &(*value.target).inner) {
+                        (InnerFieldTypeSegment::Vec(_), InnerFieldTypeSegment::Vec(_)) => {
+                            Expr::Stmt(Statement::method_chain_call(
+                                vec![
+                                    ExprMethodChainCall::Start {
+                                        receiver: Expr::Path(Path::new("value")),
+                                        method: Path::new("iter"),
+                                        arguments: vec![],
+                                    },
+                                    ExprMethodChainCall::Chained {
+                                        method: Path::new("map"),
+                                        arguments: vec![
+                                            Expr::Stmt(Statement::closure(
+                                                vec![Pat::Ident(PatIdent {
+                                                    attrs: vec![],
+                                                    by_ref: None,
+                                                    mutability: None,
+                                                    ident: create_ident("value"),
+                                                    subpat: None,
+                                                })],
+                                                ReturnType::Default,
+                                                Expr::Stmt(Statement::method_call(
+                                                    Expr::Path(Path::new("value")),
+                                                    Path::new("into"),
+                                                    vec![]
+                                                ))
+                                            ))
+                                        ],
+                                    },
+                                    ExprMethodChainCall::Chained {
+                                        method: Path::new("collect"),
+                                        arguments: vec![],
+                                    }
+                                ]
+                            ))
+                        }
+                        (InnerFieldTypeSegment::Reserved(_), InnerFieldTypeSegment::Reserved(_)) |
+                        (InnerFieldTypeSegment::Reserved(_), InnerFieldTypeSegment::Vec(_)) => {
+                            Expr::Stmt(Statement::method_call(
+                                Expr::Path(Path::new("value")),
+                                Path::new("into"),
+                                vec![]
+                            ))
+                        }
+                        _ => panic!("Remapped field not supported")
+                    }
+                }
+                _ => {
+                    Expr::Path(Path::new("value"))
+                }
             }
         };
+        let call = statement_generator(&self.ty);
         Statement::let_some_condition(
             Expr::Stmt(Statement::method_call(
                 Expr::Stmt(Statement::access_field(

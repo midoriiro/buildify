@@ -17,7 +17,7 @@ use syn::{Attribute, Block, Fields, FieldsNamed, FnArg, Generics, Ident, ImplIte
 
 pub struct Generator {
     modules: Rc<RefCell<Vec<ModuleItems>>>,
-    field_rules: Rc<RefCell<Vec<FieldRule>>>
+    pub(crate) field_rules: Rc<RefCell<Vec<FieldRule>>>
 }
 
 impl Generator {
@@ -131,7 +131,7 @@ impl Generator {
                 let mut field = Field::new(self.clone(), field);
                 self.field_rules.borrow().iter()
                     .for_each(|rule: &FieldRule| {
-                        rule.apply(&ident, &field.ident.clone(), &mut field);
+                        rule.apply(&ident,&mut field);
                     });
                 field
             })

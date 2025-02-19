@@ -4,6 +4,7 @@ use crate::generator::Generator;
 use ast_shaper::items::item::{Item, ItemTrait};
 use ast_shaper::utils::path::Path;
 use ast_shaper::utils::{create_generic_type, create_ident};
+use std::fmt::{Debug, Display, Formatter};
 use std::rc::Rc;
 use syn::PathArguments;
 
@@ -27,13 +28,19 @@ pub(crate) struct MapField {
 #[derive(Clone)]
 pub(crate) struct OptionField {
     pub ty: Path,
-    pub underlying_ty: Rc<InnerFieldTypeSegment>,
+    pub underlying_ty: Rc<FieldTypeSegment>,
 }
 
 #[derive(Clone)]
 pub(crate) struct GenericField {
     pub ty: Path,
-    pub underlying_ty: Rc<InnerFieldTypeSegment>,
+    pub underlying_ty: Rc<FieldTypeSegment>,
+}
+
+#[derive(Clone)]
+pub(crate) struct RemappedField {
+    pub source: Rc<FieldTypeSegment>,
+    pub target: Rc<FieldTypeSegment>,
 }
 
 #[derive(Clone)]
@@ -43,7 +50,8 @@ pub(crate) enum InnerFieldTypeSegment {
     Vec(VecField),
     Map(MapField),
     Option(OptionField),
-    Generic(GenericField)
+    Generic(GenericField),
+    Remap(RemappedField)
 }
 
 impl InnerFieldTypeSegment {
@@ -76,6 +84,41 @@ impl InnerFieldTypeSegment {
                     value.ty.last().unwrap().ident.to_string(),
                     vec![value.underlying_ty.unwrap()],
                 )
+            }
+            InnerFieldTypeSegment::Remap(value) => {
+                value.target.unwrap()
+            }
+        }
+    }
+}
+
+impl Display for InnerFieldTypeSegment {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            InnerFieldTypeSegment::Reserved(value) => {
+                write!(f, "{}", value)
+            }
+            InnerFieldTypeSegment::Complex(value) => {
+                write!(f, "{}", value.ident)
+            }
+            InnerFieldTypeSegment::Vec(_) => {
+                write!(f, "{}", self.unwrap())
+            }
+            InnerFieldTypeSegment::Map(_) => {
+                write!(f, "{}", self.unwrap())
+            }
+            InnerFieldTypeSegment::Option(value) => {
+                let ty = create_generic_type(
+                    "Option",
+                    vec![value.ty.clone(), value.underlying_ty.unwrap()],
+                );
+                write!(f, "{}", ty)
+            }
+            InnerFieldTypeSegment::Generic(_) => {
+                write!(f, "{}", self.unwrap())
+            }
+            InnerFieldTypeSegment::Remap(value) => {
+                write!(f, "{}", value.source.unwrap())
             }
         }
     }
@@ -112,7 +155,7 @@ impl FieldTypeSegment {
             Self {
                 inner: InnerFieldTypeSegment::Option(OptionField {
                     ty,
-                    underlying_ty: Rc::new(underlying_ty.unwrap().get(0).unwrap().to_owned().inner),
+                    underlying_ty: Rc::new(underlying_ty.unwrap().get(0).unwrap().to_owned()),
                 }),
             }
         }
@@ -134,9 +177,20 @@ impl FieldTypeSegment {
             Self {
                 inner: InnerFieldTypeSegment::Generic(GenericField {
                     ty,
-                    underlying_ty: Rc::new(underlying_ty.unwrap().get(0).unwrap().to_owned().inner),
+                    underlying_ty: Rc::new(underlying_ty.unwrap().get(0).unwrap().to_owned()),
                 })
             }
+        }
+    }
+
+    pub fn map(generator: &Generator, source: FieldTypeSegment, target_ty: Path) -> Self {
+        let target = Self::new(generator, target_ty);
+        Self {
+            inner: InnerFieldTypeSegment::Remap(RemappedField {
+                source: Rc::new(source),
+                target: Rc::new(target),
+
+            }),
         }
     }
 
@@ -180,5 +234,11 @@ impl FieldTypeSegment {
 
     pub(crate) fn unwrap(&self) -> Path {
         self.inner.unwrap()
+    }
+}
+
+impl Display for FieldTypeSegment {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        self.inner.fmt(f)
     }
 }
