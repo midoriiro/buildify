@@ -51,6 +51,23 @@ fn optional_field() -> syn::Field {
 }
 
 #[fixture]
+fn optional_and_optional_field() -> syn::Field {
+    syn::Field {
+        attrs: vec![],
+        vis: Visibility::Inherited,
+        mutability: FieldMutability::None,
+        ident: Some(create_ident("field")),
+        colon_token: None,
+        ty: Type::Path(TypePath {
+            qself: None,
+            path: Path::new("Option")
+                .with(Path::new("Option").with(Path::new("u32")).to_owned())
+                .to_syn_path(),
+        }),
+    }
+}
+
+#[fixture]
 fn boxed_field() -> syn::Field {
     syn::Field {
         attrs: vec![],
@@ -77,6 +94,23 @@ fn optional_and_boxed_field() -> syn::Field {
             qself: None,
             path: Path::new("Option")
                 .with(Path::new("Box").with(Path::new("u32")).to_owned())
+                .to_syn_path(),
+        }),
+    }
+}
+
+#[fixture]
+fn ref_counter_and_refcell_field() -> syn::Field {
+    syn::Field {
+        attrs: vec![],
+        vis: Visibility::Inherited,
+        mutability: FieldMutability::None,
+        ident: Some(create_ident("field")),
+        colon_token: None,
+        ty: Type::Path(TypePath {
+            qself: None,
+            path: Path::new("Rc")
+                .with(Path::new("RefCell").with(Path::new("u32")).to_owned())
                 .to_syn_path(),
         }),
     }
@@ -181,6 +215,30 @@ fn struct_with_optional_field(
 }
 
 #[fixture]
+fn struct_with_optional_and_optional_field(
+    mut module: ModuleItems,
+    optional_and_optional_field: syn::Field
+) -> ModuleItems {
+    let item = StructItem::new(
+        ItemStruct {
+            attrs: vec![],
+            vis: Visibility::Inherited,
+            struct_token: Default::default(),
+            ident: create_ident("StructWithOptionalAndOptionalField"),
+            generics: Default::default(),
+            fields: Fields::Named(FieldsNamed {
+                brace_token: Default::default(),
+                named: Punctuated::single(optional_and_optional_field),
+            }),
+            semi_token: None,
+        },
+        vec![]
+    );
+    module.push_struct_item(item);
+    module
+}
+
+#[fixture]
 fn struct_with_boxed_field(
     mut module: ModuleItems,
     boxed_field: syn::Field
@@ -219,6 +277,30 @@ fn struct_with_optional_and_boxed_field(
             fields: Fields::Named(FieldsNamed {
                 brace_token: Default::default(),
                 named: Punctuated::single(optional_and_boxed_field),
+            }),
+            semi_token: None,
+        },
+        vec![]
+    );
+    module.push_struct_item(item);
+    module
+}
+
+#[fixture]
+fn struct_with_ref_counter_and_refcell_field(
+    mut module: ModuleItems,
+    ref_counter_and_refcell_field: syn::Field
+) -> ModuleItems {
+    let item = StructItem::new(
+        ItemStruct {
+            attrs: vec![],
+            vis: Visibility::Inherited,
+            struct_token: Default::default(),
+            ident: create_ident("StructWithRefCounterAndRefCellField"),
+            generics: Default::default(),
+            fields: Fields::Named(FieldsNamed {
+                brace_token: Default::default(),
+                named: Punctuated::single(ref_counter_and_refcell_field),
             }),
             semi_token: None,
         },
@@ -326,7 +408,9 @@ fn struct_with_complex_field(
 fn generator(
     struct_with_required_field: ModuleItems,
     struct_with_optional_field: ModuleItems,
+    struct_with_optional_and_optional_field: ModuleItems,
     struct_with_boxed_field: ModuleItems,
+    struct_with_ref_counter_and_refcell_field: ModuleItems,
     struct_with_optional_and_boxed_field: ModuleItems,
     struct_with_vec_of_primitive_field: ModuleItems,
     struct_with_complex_field: ModuleItems,
@@ -334,7 +418,9 @@ fn generator(
     let modules = Rc::new(RefCell::new(vec![
         struct_with_required_field,
         struct_with_optional_field,
+        struct_with_optional_and_optional_field,
         struct_with_boxed_field,
+        struct_with_ref_counter_and_refcell_field,
         struct_with_optional_and_boxed_field,
         struct_with_vec_of_primitive_field,
         struct_with_complex_field
@@ -497,58 +583,12 @@ fn as_optional(
 }
 
 #[rstest]
-fn as_boxed(
+fn as_optional_and_optional(
     generator: Generator,
-    struct_with_boxed_field: ModuleItems
+    struct_with_optional_and_optional_field: ModuleItems
 ) {
     let (item_ident, functions) = assert_builder(
-        struct_with_boxed_field,
-        generator,
-        Path::new("Option").with(Path::new("u32")).to_owned()
-    );
-    assert_method(
-        &functions,
-        quote! {
-            pub fn new() -> Self {
-                Self {
-                    field: None
-                }
-            }
-        }
-    );
-    assert_method(
-        &functions,
-        quote! {
-            pub fn with_field(&mut self, value: u32) -> &mut Self {
-                self.field = Some(value);
-                self
-            }
-        }
-    );
-    assert_method(
-        &functions,
-        quote! {
-            pub fn build(&self) -> #item_ident {
-                #item_ident {
-                    field: if let Some(value) = self.field.clone() {
-                        value
-                    }
-                    else {
-                        panic!("field 'field' is required");
-                    }
-                }
-            }
-        }
-    );
-}
-
-#[rstest]
-fn as_optional_and_boxed(
-    generator: Generator,
-    struct_with_optional_and_boxed_field: ModuleItems
-) {
-    let (item_ident, functions) = assert_builder(
-        struct_with_optional_and_boxed_field,
+        struct_with_optional_and_optional_field,
         generator,
         Path::new("Option").with(Path::new("u32")).to_owned()
     );
@@ -581,6 +621,153 @@ fn as_optional_and_boxed(
                     }
                     else {
                         None
+                    }
+                }
+            }
+        }
+    );
+}
+
+#[rstest]
+fn as_boxed(
+    generator: Generator,
+    struct_with_boxed_field: ModuleItems
+) {
+    let (item_ident, functions) = assert_builder(
+        struct_with_boxed_field,
+        generator,
+        Path::new("Option")
+            .with(Path::new("Box").with(Path::new("u32")).to_owned())
+            .to_owned()
+    );
+    assert_method(
+        &functions,
+        quote! {
+            pub fn new() -> Self {
+                Self {
+                    field: None
+                }
+            }
+        }
+    );
+    assert_method(
+        &functions,
+        quote! {
+            pub fn with_field(&mut self, value: Box<u32>) -> &mut Self {
+                self.field = Some(value);
+                self
+            }
+        }
+    );
+    assert_method(
+        &functions,
+        quote! {
+            pub fn build(&self) -> #item_ident {
+                #item_ident {
+                    field: if let Some(value) = self.field.clone() {
+                        value
+                    }
+                    else {
+                        panic!("field 'field' is required");
+                    }
+                }
+            }
+        }
+    );
+}
+
+#[rstest]
+fn as_optional_and_boxed(
+    generator: Generator,
+    struct_with_optional_and_boxed_field: ModuleItems
+) {
+    let (item_ident, functions) = assert_builder(
+        struct_with_optional_and_boxed_field,
+        generator,
+        Path::new("Option")
+            .with(Path::new("Box").with(Path::new("u32")).to_owned())
+            .to_owned()
+    );
+    assert_method(
+        &functions,
+        quote! {
+            pub fn new() -> Self {
+                Self {
+                    field: None
+                }
+            }
+        }
+    );
+    assert_method(
+        &functions,
+        quote! {
+            pub fn with_field(&mut self, value: Box<u32>) -> &mut Self {
+                self.field = Some(value);
+                self
+            }
+        }
+    );
+    assert_method(
+        &functions,
+        quote! {
+            pub fn build(&self) -> #item_ident {
+                #item_ident {
+                    field: if let Some(value) = self.field.clone() {
+                        Some(value)
+                    }
+                    else {
+                        None
+                    }
+                }
+            }
+        }
+    );
+}
+
+#[rstest]
+fn as_ref_counter_and_ref_cell(
+    generator: Generator,
+    struct_with_ref_counter_and_refcell_field: ModuleItems
+) {
+    let (item_ident, functions) = assert_builder(
+        struct_with_ref_counter_and_refcell_field,
+        generator,
+        Path::new("Option")
+            .with(Path::new("Rc")
+                .with(Path::new("RefCell").with(Path::new("u32")).to_owned())
+                .to_owned()
+            )
+            .to_owned()
+    );
+    assert_method(
+        &functions,
+        quote! {
+            pub fn new() -> Self {
+                Self {
+                    field: None
+                }
+            }
+        }
+    );
+    assert_method(
+        &functions,
+        quote! {
+            pub fn with_field(&mut self, value: Rc<RefCell<u32>>) -> &mut Self {
+                self.field = Some(value);
+                self
+            }
+        }
+    );
+    assert_method(
+        &functions,
+        quote! {
+            pub fn build(&self) -> #item_ident {
+                #item_ident {
+                    field: if let Some(value) = self.field.clone() {
+                        value
+                    }
+                    else {
+                        panic!("field 'field' is required");
                     }
                 }
             }

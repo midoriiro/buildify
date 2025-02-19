@@ -15,8 +15,3 @@ pub(crate) const RESERVED_TYPES: &[&str] = &[
     "Vec",
     "HashMap"
 ];
-
-pub(crate) const DECOMPOSABLE_TYPES: &[&str] = &[
-    "Option",
-    "Box"
-];

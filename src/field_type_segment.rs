@@ -1,4 +1,4 @@
-use crate::constants::{DECOMPOSABLE_TYPES, RESERVED_TYPES};
+use crate::constants::RESERVED_TYPES;
 use crate::field::Field;
 use crate::generator::Generator;
 use ast_shaper::items::item::{Item, ItemTrait};
@@ -25,7 +25,13 @@ pub(crate) struct MapField {
 }
 
 #[derive(Clone)]
-pub(crate) struct DecomposableField {
+pub(crate) struct OptionField {
+    pub ty: Path,
+    pub underlying_ty: Rc<InnerFieldTypeSegment>,
+}
+
+#[derive(Clone)]
+pub(crate) struct GenericField {
     pub ty: Path,
     pub underlying_ty: Rc<InnerFieldTypeSegment>,
 }
@@ -36,7 +42,8 @@ pub(crate) enum InnerFieldTypeSegment {
     Complex(ComplexField),
     Vec(VecField),
     Map(MapField),
-    Decomposable(DecomposableField)
+    Option(OptionField),
+    Generic(GenericField)
 }
 
 impl InnerFieldTypeSegment {
@@ -61,8 +68,14 @@ impl InnerFieldTypeSegment {
                     vec![value.key.inner.unwrap(), value.value.inner.unwrap()],
                 )
             }
-            InnerFieldTypeSegment::Decomposable(value) => {
+            InnerFieldTypeSegment::Option(value) => {
                 value.underlying_ty.unwrap()
+            }
+            InnerFieldTypeSegment::Generic(value) => {
+                create_generic_type(
+                    value.ty.last().unwrap().ident.to_string(),
+                    vec![value.underlying_ty.unwrap()],
+                )
             }
         }
     }
@@ -95,27 +108,34 @@ impl FieldTypeSegment {
                 }),
             }
         }
+        else if ty_ident == "Option" {
+            Self {
+                inner: InnerFieldTypeSegment::Option(OptionField {
+                    ty,
+                    underlying_ty: Rc::new(underlying_ty.unwrap().get(0).unwrap().to_owned().inner),
+                }),
+            }
+        }
         else if RESERVED_TYPES.contains(&ty_ident.as_str()) {
             Self {
                 inner: InnerFieldTypeSegment::Reserved(ty)
             }
         }
-        else if DECOMPOSABLE_TYPES.contains(&ty_ident.as_str()) {
-            Self {
-                inner: InnerFieldTypeSegment::Decomposable(DecomposableField {
-                    ty,
-                    underlying_ty: Rc::new(underlying_ty.unwrap().get(0).unwrap().to_owned().inner),
-                })
-            }
-        }
-        else {
-            let complex_item = generator.find_item(&ty_ident);
-            let (ident, inner) = Self::wrap(generator, complex_item.unwrap());
+        else if let Some(item) = generator.find_item(&ty_ident) {
+            let (ident, inner) = Self::wrap(generator, item);
             Self {
                 inner: InnerFieldTypeSegment::Complex(ComplexField {
                     ident,
                     inner
                 }),
+            }
+        }
+        else {
+            Self {
+                inner: InnerFieldTypeSegment::Generic(GenericField {
+                    ty,
+                    underlying_ty: Rc::new(underlying_ty.unwrap().get(0).unwrap().to_owned().inner),
+                })
             }
         }
     }
