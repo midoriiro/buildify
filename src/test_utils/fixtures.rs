@@ -1,18 +1,16 @@
-use syn::ExprPath;
 use crate::generator::Generator;
 use ast_shaper::items::module_item::ModuleItem;
 use ast_shaper::items::struct_item::StructItem;
 use ast_shaper::utils::create_ident;
 use ast_shaper::utils::path::Path;
 use ast_shaper::utils::punctuated::PunctuatedExt;
+use quote::ToTokens;
 use rstest::fixture;
 use std::cell::RefCell;
 use std::rc::Rc;
-use quote::ToTokens;
 use syn::punctuated::Punctuated;
-use syn::{AttrStyle, Attribute, Expr, ExprLit, FieldMutability, Fields, FieldsNamed, ItemStruct, Lit, LitStr, MacroDelimiter, Meta, MetaList, MetaNameValue, Token, Type, TypePath, Visibility};
-use syn::spanned::Spanned;
-use syn::token::Token;
+use syn::ExprPath;
+use syn::{AttrStyle, Attribute, Expr, FieldMutability, Fields, FieldsNamed, ItemStruct, MacroDelimiter, Meta, MetaList, MetaNameValue, Token, Type, TypePath, Visibility};
 
 #[fixture]
 pub fn module() -> ModuleItem {

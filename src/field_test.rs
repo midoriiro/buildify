@@ -1,8 +1,8 @@
 use crate::generator::Generator;
+use crate::test_utils::asserts::{assert_builder, assert_method};
 use crate::test_utils::fixtures::{generator, struct_with_boxed_field, struct_with_complex_field, struct_with_map_of_primitive_field, struct_with_optional_and_boxed_field, struct_with_optional_and_optional_field, struct_with_optional_field, struct_with_ref_counter_and_refcell_field, struct_with_required_field, struct_with_vec_of_primitive_field};
 use ast_shaper::items::module_item::ModuleItem;
 use ast_shaper::utils::path::Path;
-use crate::test_utils::asserts::{assert_builder, assert_method};
 use quote::quote;
 use rstest::rstest;
 

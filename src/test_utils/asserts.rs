@@ -1,12 +1,12 @@
+use crate::generator::Generator;
+use ast_shaper::items::fn_item::FnItem;
+use ast_shaper::items::item::ItemTrait;
+use ast_shaper::items::module_item::ModuleItem;
+use ast_shaper::items::struct_item::StructItem;
+use ast_shaper::utils::path::Path;
+use pretty_assertions::assert_eq;
 use quote::__private::TokenStream;
 use syn::{parse2, Fields, ImplItemFn, Type};
-use ast_shaper::items::fn_item::FnItem;
-use ast_shaper::items::module_item::ModuleItem;
-use ast_shaper::utils::path::Path;
-use crate::generator::Generator;
-use pretty_assertions::assert_eq;
-use ast_shaper::items::item::ItemTrait;
-use ast_shaper::items::struct_item::StructItem;
 
 fn internal_assert_builder(
     item_ident: String,

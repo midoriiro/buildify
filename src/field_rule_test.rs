@@ -1,9 +1,9 @@
-use quote::quote;
 use crate::generator::Generator;
 use crate::test_utils::asserts::{assert_builder_with_rules, assert_method};
 use crate::test_utils::fixtures::{generator, struct_with_field_attributes, struct_with_required_field, struct_with_vec_of_primitive_field};
 use ast_shaper::items::module_item::ModuleItem;
 use ast_shaper::utils::path::Path;
+use quote::quote;
 use rstest::rstest;
 
 #[rstest]
@@ -230,7 +230,7 @@ fn field_type_selector(
             match index {
                 0 => {
                     format!("{}: {}", index, 0)
-                } 
+                }
                 _ => format!("{}: {}", index, 1)
             },
             format!("{}: {}", index, field.attrs.len())
