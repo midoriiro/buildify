@@ -1,7 +1,8 @@
 use crate::generator::Generator;
 use crate::test_utils::asserts::{assert_builder_with_rules, assert_method};
-use crate::test_utils::fixtures::{generator, struct_with_field_attributes, struct_with_required_field, struct_with_vec_of_primitive_field};
+use crate::test_utils::fixtures::generator;
 use ast_shaper::items::module_item::ModuleItem;
+use ast_shaper::test_utils::fixtures::{struct_with_field_attributes, struct_with_optional_and_optional_field, struct_with_required_field, struct_with_vec_of_primitive_field};
 use ast_shaper::utils::path::Path;
 use quote::quote;
 use rstest::rstest;
@@ -475,6 +476,69 @@ fn map_from_vec_to_vec(
                     }
                     else {
                         panic!("field 'field' is required");
+                    }
+                }
+            }
+        }
+    );
+}
+
+#[rstest]
+fn map_from_optional_and_optional_to_vec(
+    mut generator: Generator,
+    struct_with_optional_and_optional_field: ModuleItem
+) {
+    let (generator, item_ident, item) = assert_builder_with_rules(
+        &struct_with_optional_and_optional_field,
+        &mut generator,
+        Path::new("Option")
+            .with(Path::new("Vec").with(Path::new("u64")).to_owned())
+            .to_owned(),
+        vec![
+            |generator: &mut Generator| {
+                generator.with_rule()
+                    .for_all()
+                    .with_field_ident("field")
+                    .then_map_to_vec(Path::new("u64"));
+            }
+        ]
+    );
+    assert_eq!(1, generator.field_rules.borrow().len());
+    let functions = &item.impl_items.first().unwrap().functions;
+    assert_method(
+        &functions,
+        quote! {
+            pub fn new() -> Self {
+                Self {
+                    field: None
+                }
+            }
+        }
+    );
+    assert_method(
+        &functions,
+        quote! {
+            pub fn with_field(&mut self, value: u64) -> &mut Self {
+                if let None = self.field {
+                    self.field = Some(Vec::new());
+                }
+                self.field.as_mut().unwrap().push(value);
+                self
+            }
+        }
+    );
+    assert_method(
+        &functions,
+        quote! {
+            pub fn build(&self) -> #item_ident {
+                #item_ident {
+                    field: if let Some(value) = self.field.clone() {
+                        Some(value.iter()
+                            .map(|value| value.into())
+                            .collect())
+                    }
+                    else {
+                        None
                     }
                 }
             }

@@ -8,42 +8,42 @@ use std::fmt::{Debug, Display, Formatter};
 use std::rc::Rc;
 use syn::PathArguments;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub(crate) struct ComplexField {
     pub ident: String,
     pub inner: Vec<Field>
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub(crate) struct VecField {
     pub item: Rc<FieldTypeSegment>
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub(crate) struct MapField {
     pub key: Rc<FieldTypeSegment>,
     pub value: Rc<FieldTypeSegment>,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub(crate) struct OptionField {
     pub ty: Path,
     pub underlying_ty: Rc<FieldTypeSegment>,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub(crate) struct GenericField {
     pub ty: Path,
     pub underlying_ty: Rc<FieldTypeSegment>,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub(crate) struct RemappedField {
     pub source: Rc<FieldTypeSegment>,
     pub target: Rc<FieldTypeSegment>,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub(crate) enum InnerFieldTypeSegment {
     Reserved(Path),
     Complex(ComplexField),
@@ -55,6 +55,15 @@ pub(crate) enum InnerFieldTypeSegment {
 }
 
 impl InnerFieldTypeSegment {
+    pub(crate) fn unwrap_underlying_option(&self) -> Self {
+        match self {
+            InnerFieldTypeSegment::Option(value) => {
+                value.underlying_ty.inner.unwrap_underlying_option()
+            }
+            _ => self.clone()
+        }
+    }
+    
     pub(crate) fn unwrap(&self) -> Path {
         match self {
             InnerFieldTypeSegment::Reserved(value) => {
@@ -124,7 +133,7 @@ impl Display for InnerFieldTypeSegment {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub(crate) struct FieldTypeSegment {
     pub inner: InnerFieldTypeSegment
 }
@@ -152,10 +161,12 @@ impl FieldTypeSegment {
             }
         }
         else if ty_ident == "Option" {
+            let underlying_ty = underlying_ty.unwrap();
+            let underlying_ty = underlying_ty.get(0).unwrap();
             Self {
                 inner: InnerFieldTypeSegment::Option(OptionField {
                     ty,
-                    underlying_ty: Rc::new(underlying_ty.unwrap().get(0).unwrap().to_owned()),
+                    underlying_ty: Rc::new(FieldTypeSegment::new(generator, underlying_ty.inner.unwrap_underlying_option().unwrap())),
                 }),
             }
         }
@@ -171,6 +182,11 @@ impl FieldTypeSegment {
                     ident,
                     inner
                 }),
+            }
+        }
+        else if underlying_ty.is_none() {
+            Self {
+                inner: InnerFieldTypeSegment::Reserved(ty)
             }
         }
         else {
@@ -239,6 +255,6 @@ impl FieldTypeSegment {
 
 impl Display for FieldTypeSegment {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        self.inner.fmt(f)
+        write!(f, "{}", self.inner)
     }
 }

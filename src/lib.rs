@@ -1,6 +1,7 @@
 mod constants;
 
 mod generator;
+pub use generator::Generator as BuilderGenerator;
 
 mod field;
 #[cfg(test)]

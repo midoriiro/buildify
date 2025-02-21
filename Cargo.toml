@@ -13,9 +13,9 @@ version = "0.1.0"
 ast-shaper = { path = "../ast-shaper" }
 syn = { version = "2.0", features = ["full", "derive", "extra-traits"] }
 quote = "1.0"
-prettyplease = "0.2"
 itertools = "0.14"
 
 [dev-dependencies]
+ast-shaper = { path = "../ast-shaper", features = ["test"] }
 rstest = "0.24"
 pretty_assertions = "1.4"

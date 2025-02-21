@@ -15,6 +15,7 @@ use std::rc::Rc;
 use syn::punctuated::Punctuated;
 use syn::{Attribute, Block, Fields, FieldsNamed, FnArg, Generics, Ident, ImplItem, ImplItemFn, ItemImpl, ItemStruct, Receiver, ReturnType, Signature, Token, Type, TypePath, TypeReference, Visibility};
 
+#[derive(Debug, Clone)]
 pub struct Generator {
     modules: Rc<RefCell<Vec<ModuleItem>>>,
     pub(crate) field_rules: Rc<RefCell<Vec<FieldRule>>>
@@ -331,14 +332,5 @@ impl Generator {
             },
         });
         item
-    }
-}
-
-impl Clone for Generator {
-    fn clone(&self) -> Self {
-        Self {
-            modules: self.modules.clone(),
-            field_rules: self.field_rules.clone(),
-        }
     }
 }

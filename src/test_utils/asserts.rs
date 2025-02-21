@@ -3,8 +3,10 @@ use ast_shaper::items::fn_item::FnItem;
 use ast_shaper::items::item::ItemTrait;
 use ast_shaper::items::module_item::ModuleItem;
 use ast_shaper::items::struct_item::StructItem;
+use ast_shaper::utils::parsing::TokenStreamExt;
 use ast_shaper::utils::path::Path;
 use pretty_assertions::assert_eq;
+use quote::ToTokens;
 use quote::__private::TokenStream;
 use syn::{parse2, Fields, ImplItemFn, Type};
 
@@ -85,21 +87,21 @@ pub fn assert_method(functions: &Vec<FnItem>, expected_method: TokenStream) {
     assert_eq!(expected_method_arguments.len(), method_arguments.len());
     for index in 0..method_arguments.len() {
         assert_eq!(
-            expected_method_arguments[index],
-            method_arguments[index]
+            expected_method_arguments[index].to_token_stream().to_string(),
+            method_arguments[index].to_token_stream().to_string()
         );
     }
     assert_eq!(
-        expected_method.sig.output,
-        method.signature().output
+        expected_method.sig.output.to_token_stream().to_string(),
+        method.signature().output.to_token_stream().to_string()
     );
     let method_statements = &method.item.block().stmts;
     let expected_method_statements = &expected_method.block.stmts;
     assert_eq!(expected_method_statements.len(), method_statements.len());
     for index in 0..method_statements.len() {
         assert_eq!(
-            expected_method_statements[index],
-            method_statements[index]
+            expected_method_statements[index].to_token_stream().to_string(),
+            method_statements[index].to_token_stream().to_string()
         );
     }
 }

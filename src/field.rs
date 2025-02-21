@@ -8,7 +8,7 @@ use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::{Attribute, Block, FnArg, Ident, ImplItem, ImplItemFn, Pat, PatIdent, PatType, Receiver, ReturnType, Signature, Stmt, Type, TypePath, TypeReference, Visibility};
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub(crate) struct Field {
     generator: Generator,
     pub item: syn::Field,
@@ -463,7 +463,42 @@ impl Field {
                                 vec![]
                             ))
                         }
-                        _ => panic!("Remapped field not supported")
+                        (InnerFieldTypeSegment::Option(_), InnerFieldTypeSegment::Vec(_)) => {
+                            Expr::Stmt(Statement::method_chain_call(
+                                vec![
+                                    ExprMethodChainCall::Start {
+                                        receiver: Expr::Path(Path::new("value")),
+                                        method: Path::new("iter"),
+                                        arguments: vec![],
+                                    },
+                                    ExprMethodChainCall::Chained {
+                                        method: Path::new("map"),
+                                        arguments: vec![
+                                            Expr::Stmt(Statement::closure(
+                                                vec![Pat::Ident(PatIdent {
+                                                    attrs: vec![],
+                                                    by_ref: None,
+                                                    mutability: None,
+                                                    ident: create_ident("value"),
+                                                    subpat: None,
+                                                })],
+                                                ReturnType::Default,
+                                                Expr::Stmt(Statement::method_call(
+                                                    Expr::Path(Path::new("value")),
+                                                    Path::new("into"),
+                                                    vec![]
+                                                ))
+                                            ))
+                                        ],
+                                    },
+                                    ExprMethodChainCall::Chained {
+                                        method: Path::new("collect"),
+                                        arguments: vec![],
+                                    }
+                                ]
+                            ))
+                        }
+                        _ => panic!("Remapped field not supported: {:?}", value)
                     }
                 }
                 _ => {

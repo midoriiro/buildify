@@ -1,2 +1,2 @@
-pub mod fixtures;
 pub mod asserts;
+pub mod fixtures;

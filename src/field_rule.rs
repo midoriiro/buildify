@@ -3,6 +3,7 @@ use ast_shaper::utils::create_generic_type;
 use ast_shaper::utils::path::Path;
 use quote::ToTokens;
 use std::cell::RefCell;
+use std::fmt::{Debug, Formatter};
 use std::rc::Rc;
 use syn::{parse_str, Meta};
 
@@ -231,5 +232,16 @@ impl FieldRule {
             None => {}
         }
         (self.rule)(field)
+    }
+}
+
+impl Debug for FieldRule {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("FieldRule")
+            .field("item_ident", &self.item_ident)
+            .field("field_ident", &self.field_ident)
+            .field("field_type", &self.field_type)
+            .field("rule", &"Not debuggable")
+            .finish()
     }
 }
